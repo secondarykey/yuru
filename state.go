@@ -18,21 +18,21 @@ type State struct {
 
 type Queue []*State
 
-func NewState(combo, r, c, turn int, route Route, G Board) *State {
+func NewState(r, c, turn int, route Route, P Board) *State {
 
 	s := State{
-		combo: combo,
-		nowR:  r,
-		nowC:  c,
-		turn:  turn,
+		nowR: r,
+		nowC: c,
+		turn: turn,
 	}
+	s.combo = count(P)
 
 	if route == nil {
 		s.route = make(Route, 0)
 	} else {
-		s.route = route.Copy()
+		s.route = route
 	}
-	s.G = G.Copy()
+	s.G = P
 
 	return &s
 }

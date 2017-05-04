@@ -3,106 +3,65 @@ package main
 import (
 	"container/heap"
 	"sync"
-
-	"github.com/cheggaaa/pb"
 )
 
 // T = Turn
 // B = Beam
-func search(T, B int) *State {
+func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 
-	num := count(G)
+	wg.Add(1)
+	q := make(Queue, 0)
+	initial := NewState(r, c, 0, nil, G.Copy())
 
-	maxCount := T * B * R * C
-	bar := pb.StartNew(maxCount)
+	heap.Push(&q, initial)
+	bestQ := make(Queue, 0)
 
-	//wg := &sync.WaitGroup{}
+	for turn := 0; turn < T; turn++ {
 
-	//ch := make(chan *State)
+		nq := make(Queue, 0)
+		for k := 0; k < B; k++ {
+			if len(q) == 0 {
+				break
+			}
+			cur := q.Pop().(*State)
 
-	//開始点を設定
-	for sr := 0; sr < R; sr++ {
-		for sc := 0; sc < C; sc++ {
+			curR := cur.nowR
+			curC := cur.nowC
+			curRoute := cur.route
+			curG := cur.G
 
-			//go func() {
+			for i := 0; i < N; i++ {
 
-			//wg.Add(1)
+				nr := curR + DR[i]
+				nc := curC + DC[i]
 
-			q := make(Queue, 0)
-			initial := NewState(num, sr, sc, 0, nil, G)
-
-			heap.Push(&q, initial)
-			bestQ := make(Queue, 0)
-
-			for turn := 0; turn < T; turn++ {
-
-				nq := make(Queue, 0)
-
-				for k := 0; k < B; k++ {
-
-					if len(q) == 0 {
-						break
-					}
-
-					cur := q.Pop().(*State)
-
-					curR := cur.nowR
-					curC := cur.nowC
-					curRoute := cur.route
-					curG := cur.G
-
-					for i := 0; i < N; i++ {
-
-						nr := curR + DR[i]
-						nc := curC + DC[i]
-
-						if nr < 0 || R <= nr || nc < 0 || C <= nc {
-							continue
-						}
-
-						if len(curRoute) != 0 && ((curRoute[len(curRoute)-1]+N/2)%N) == i {
-							continue
-						}
-
-						nsRoute := append(curRoute, i)
-
-						ns := NewState(0, nr, nc, turn+1, nsRoute, curG)
-						ns.G[curR][curC], ns.G[nr][nc] = ns.G[nr][nc], ns.G[curR][curC]
-
-						ns.combo = count(ns.G)
-						heap.Push(&nq, ns)
-					}
+				if nr < 0 || R <= nr || nc < 0 || C <= nc {
+					continue
 				}
 
-				q = nq
-				heap.Push(&bestQ, nq[0])
+				if len(curRoute) != 0 && ((curRoute[len(curRoute)-1]+N/2)%N) == i {
+					continue
+				}
+
+				nsRoute := append(curRoute.Copy(), i)
+				tG := curG.Copy()
+				tG[curR][curC], tG[nr][nc] = tG[nr][nc], tG[curR][curC]
+
+				ns := NewState(nr, nc, turn+1, Route(nsRoute), tG)
+				heap.Push(&nq, ns)
 			}
-
-			best := bestQ.Pop().(*State)
-			best.startR = sr
-			best.startC = sc
-
-			//ch <- best
-			//wg.Done()
-			//}()
-
 		}
+
+		q = nq
+		heap.Push(&bestQ, nq[0])
 	}
 
-	bar.Finish()
-	//wg.Wait()
+	best := bestQ.Pop().(*State)
+	best.startR = r
+	best.startC = c
 
-	res := NewState(num, -1, -1, 0, nil, G)
-	for {
-		state, ok := <-ch
-		if !ok {
-			break
-		}
-		if !res.Less(state) {
-			res = state
-		}
-	}
-	return res
+	ch <- best
+	wg.Done()
 }
 
 func count(p Board) int {

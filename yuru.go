@@ -2,27 +2,9 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
-
-const (
-	R         = 5
-	C         = 6
-	DIRECTION = "NESW"
-)
-
-var G Board = Board{
-	{0, 2, 0, 3, 0, 5},
-	{3, 0, 1, 2, 0, 0},
-	{2, 1, 5, 0, 5, 5},
-	{2, 5, 5, 2, 0, 5},
-	{0, 4, 3, 3, 2, 4},
-}
-
-var DR [4]int = [4]int{-1, 0, 1, 0}
-var DC [4]int = [4]int{0, 1, 0, -1}
-
-var N int = len(DR)
 
 func init() {
 	fmt.Println("初期盤面------------------")
@@ -37,7 +19,6 @@ func main() {
 	rtn.Print()
 
 	fmt.Println(time.Now())
-
 	turn := len(rtn.route)
 	combo := rtn.combo
 
@@ -54,4 +35,30 @@ func main() {
 	}
 
 	fmt.Println(time.Now())
+}
+
+// T = Turn , B = Beam
+func search(T, B int) *State {
+
+	res := NewState(-1, -1, 0, nil, G)
+
+	wg := &sync.WaitGroup{}
+	ch := make(chan *State, R*C)
+
+	for sr := 0; sr < R; sr++ {
+		for sc := 0; sc < C; sc++ {
+			go analysis(T, B, sr, sc, wg, ch)
+		}
+
+	}
+
+	wg.Wait()
+	close(ch)
+
+	for s := range ch {
+		if !res.Less(s) {
+			res = s
+		}
+	}
+	return res
 }
