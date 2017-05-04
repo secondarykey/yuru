@@ -8,38 +8,27 @@ import (
 
 func init() {
 	fmt.Println("初期盤面------------------")
+
 	G.Print()
+	calcMax()
 }
 
 func main() {
-	fmt.Println(time.Now())
-
-	rtn := search(100, 500)
-	fmt.Printf("簡易探査-Turn:%d-Beam:%d-------------\n", 100, 500)
+	rtn := search(50, 50)
 	rtn.Print()
 
-	fmt.Println(time.Now())
-	turn := len(rtn.route)
-	combo := rtn.combo
-
-	rtn = search(turn, 5000)
-	fmt.Printf("探査-Turn:%d-Beam:%d-------------\n", turn, 5000)
-	rtn.Print()
-
-	n := len(rtn.route)
-	//良くなった部分があれば
-	if n > combo || rtn.turn < turn {
-		rtn = search(n, 20000)
-		fmt.Printf("探査-Turn:%d-Beam:%d-------------\n", n, 20000)
+	if !max(rtn.combo) {
+		fmt.Println("最大コンボが見つかりませんでした")
+		rtn = search(100, 100)
 		rtn.Print()
 	}
-
-	fmt.Println(time.Now())
 }
 
 // T = Turn , B = Beam
 func search(T, B int) *State {
 
+	fmt.Printf("Turn:%d-Beam:%d-------------\n", T, B)
+	fmt.Println(time.Now())
 	res := NewState(-1, -1, 0, nil, G)
 
 	wg := &sync.WaitGroup{}
@@ -49,7 +38,6 @@ func search(T, B int) *State {
 		for sc := 0; sc < C; sc++ {
 			go analysis(T, B, sr, sc, wg, ch)
 		}
-
 	}
 
 	wg.Wait()
@@ -60,5 +48,7 @@ func search(T, B int) *State {
 			res = s
 		}
 	}
+
+	fmt.Println(time.Now())
 	return res
 }

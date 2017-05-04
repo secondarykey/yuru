@@ -2,8 +2,32 @@ package main
 
 import (
 	"container/heap"
+	"fmt"
 	"sync"
 )
+
+var gMax int = 0
+
+func calcMax() {
+
+	for d := 0; d < 10; d++ {
+		n := 0
+
+		for r := 0; r < R; r++ {
+			for c := 0; c < C; c++ {
+				if G[r][c] == d {
+					n++
+				}
+			}
+		}
+		gMax += +n / 3
+	}
+	fmt.Printf("最大コンボ:%d\n", gMax)
+}
+
+func max(c int) bool {
+	return c == gMax
+}
 
 // T = Turn
 // B = Beam
@@ -68,6 +92,7 @@ func count(p Board) int {
 
 	comboMap := createComboMap(p)
 
+	d := p.Copy()
 	res := 0
 	for _, v := range comboMap {
 
@@ -92,10 +117,14 @@ func count(p Board) int {
 			for c := 0; c < C; c++ {
 				if seen[r][c] {
 					res++
-					dfs(r, c, seen)
+					dfs(r, c, seen, d)
 				}
 			}
 		}
+	}
+
+	if res != 0 {
+		res += down(d)
 	}
 
 	return res
@@ -107,7 +136,7 @@ func createComboMap(p Board) map[int][]*Combo {
 
 	for r := 0; r < R; r++ {
 		for c := 0; c < C; c++ {
-			if c == 0 || p[r][c] != p[r][c-1] {
+			if (c == 0 || p[r][c] != p[r][c-1]) && p[r][c] != DONE {
 				nya(p, r, c, r, c, 0, 1, rtnMap)
 			}
 		}
@@ -115,7 +144,7 @@ func createComboMap(p Board) map[int][]*Combo {
 
 	for c := 0; c < C; c++ {
 		for r := 0; r < R; r++ {
-			if r == 0 || p[r][c] != p[r-1][c] {
+			if (r == 0 || p[r][c] != p[r-1][c]) && p[r][c] != DONE {
 				nya(p, r, c, r, c, 1, 0, rtnMap)
 			}
 		}
@@ -136,9 +165,9 @@ func nya(p Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
 
 		elm := 3
 		//2 Way
-		if p[sr][sc] == 7 {
-			elm = 4
-		}
+		//if p[sr][sc] == 7 {
+		//elm = 4
+		//}
 
 		if dist >= elm {
 
@@ -158,10 +187,13 @@ func nya(p Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
 	}
 }
 
-func dfs(r, c int, seen [][]bool) {
+func dfs(r, c int, seen [][]bool, p Board) {
 
 	seen[r][c] = false
+	p[r][c] = DONE
+
 	for i := 0; i < N; i++ {
+
 		nr := r + DR[i]
 		nc := c + DC[i]
 
@@ -170,7 +202,20 @@ func dfs(r, c int, seen [][]bool) {
 		}
 
 		if seen[nr][nc] {
-			dfs(nr, nc, seen)
+			dfs(nr, nc, seen, p)
 		}
 	}
+}
+
+func down(p Board) int {
+	for c := 0; c < C; c++ {
+		for d := 0; d < R; d++ {
+			for r := 0; r < R-1; r++ {
+				if p[r+1][c] == DONE {
+					p[r][c], p[r+1][c] = p[r+1][c], p[r][c]
+				}
+			}
+		}
+	}
+	return count(p)
 }

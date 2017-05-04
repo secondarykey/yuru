@@ -14,8 +14,12 @@ const (
 	YELLOW
 	BLACK
 	DISTURB
+	POISON
+	DEADLY
 	BOMB
 )
+
+const DONE = -1
 
 func (b Board) Copy() Board {
 	rtn := make(Board, len(b))
