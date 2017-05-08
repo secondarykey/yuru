@@ -1,0 +1,33 @@
+<yuru max="true">
+    <turn>50</turn>
+    <beam>50</beam>
+
+    <board r="5" c="6">
+        2,5,5,3,2,1
+        4,0,5,1,5,2
+        2,5,5,3,2,1
+        2,5,5,3,2,1
+        2,5,5,3,2,1
+    </board>
+
+    <!-- until support -->
+    <drop id="0">
+        <way>0.0</way>
+        <row>0.0</row>
+        <hert>0.0</hert>
+    </drop>
+
+    <drop id="4">
+        <required>true</required>
+        <way>0.0</way>
+        <row>0.0</row>
+        <hert>0.0</hert>
+    </drop>
+
+    <drop id="8">
+        <way>1.0</way>
+        <row>0.0</row>
+        <hert>0.0</hert>
+    </drop>
+
+</yuru>

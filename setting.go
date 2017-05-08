@@ -1,22 +1,96 @@
 package main
 
-import ()
+import (
+	"encoding/csv"
+	"encoding/xml"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"strconv"
+	"strings"
+)
 
 const (
-	R         = 5
-	C         = 6
 	DIRECTION = "NESW"
 )
 
-var G Board = Board{
-	{2, 5, 5, 3, 2, 1},
-	{4, 0, 5, 1, 5, 2},
-	{1, 1, 2, 5, 5, 0},
-	{3, 1, 4, 5, 4, 0},
-	{5, 2, 0, 1, 0, 1},
+var G Board
+
+var (
+	DR [4]int = [4]int{-1, 0, 1, 0}
+	DC [4]int = [4]int{0, 1, 0, -1}
+	N  int    = len(DR)
+)
+
+type Config struct {
+	Max   bool      `xml:"max,attr"`
+	Turn  int       `xml:"turn"`
+	Beam  int       `xml:"beam"`
+	Board BoardInfo `xml:"board"`
 }
 
-var DR [4]int = [4]int{-1, 0, 1, 0}
-var DC [4]int = [4]int{0, 1, 0, -1}
+type BoardInfo struct {
+	R int    `xml:"r,attr"`
+	C int    `xml:"c,attr"`
+	B string `xml:",chardata"`
+}
 
-var N int = len(DR)
+var gConf *Config
+
+func initialize(file string) error {
+
+	var conf Config
+
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	err = xml.Unmarshal(data, &conf)
+	if err != nil {
+		return err
+	}
+
+	G = make([][]int, conf.Board.R)
+	for idx := 0; idx < conf.Board.R; idx++ {
+		G[idx] = make([]int, conf.Board.C)
+	}
+
+	idx := 0
+	r := csv.NewReader(strings.NewReader(conf.Board.B))
+	for {
+		record, err := r.Read()
+
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			continue
+		}
+
+		if len(record) == 0 {
+			continue
+		}
+
+		if len(record) > conf.Board.C {
+			return fmt.Errorf("Error CSV Format C[%d],%v", len(record), record)
+		}
+
+		if idx >= conf.Board.R {
+			return fmt.Errorf("Error CSV Format R[%d]", idx)
+		}
+
+		for c := 0; c < conf.Board.C; c++ {
+			G[idx][c], err = strconv.Atoi(strings.Trim(record[c], " "))
+			if err != nil {
+				return fmt.Errorf("Error CSV Data Format [%s]", record[c])
+			}
+		}
+		idx++
+	}
+
+	gConf = &conf
+
+	return nil
+}

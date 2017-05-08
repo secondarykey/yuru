@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 )
@@ -9,18 +10,39 @@ import (
 func init() {
 	fmt.Println("初期盤面------------------")
 
-	G.Print()
-	calcMax()
 }
 
 func main() {
-	rtn := search(50, 50)
+
+	cmds := os.Args
+	var conf string
+	if len(cmds) > 2 {
+		conf = cmds[1]
+	}
+
+	//ファイルの指定
+	if conf == "" {
+		conf = "yuru.xml"
+	}
+
+	err := initialize(conf)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	G.Print()
+	calcMax()
+
+	rtn := search(gConf.Turn, gConf.Beam)
 	rtn.Print()
 
+	//再検索を行うかを判定
+
 	if !max(rtn.combo) {
-		fmt.Println("最大コンボが見つかりませんでした")
-		rtn = search(100, 100)
-		rtn.Print()
+		fmt.Println("最大コンボが見つからなかったので、再検索するとかも可能にする")
+		//rtn = search(BT*2, BB*2)
+		//rtn.Print()
 	}
 }
 
@@ -32,10 +54,10 @@ func search(T, B int) *State {
 	res := NewState(-1, -1, 0, nil, G)
 
 	wg := &sync.WaitGroup{}
-	ch := make(chan *State, R*C)
+	ch := make(chan *State, gConf.Board.R*gConf.Board.C)
 
-	for sr := 0; sr < R; sr++ {
-		for sc := 0; sc < C; sc++ {
+	for sr := 0; sr < gConf.Board.R; sr++ {
+		for sc := 0; sc < gConf.Board.C; sc++ {
 			go analysis(T, B, sr, sc, wg, ch)
 		}
 	}

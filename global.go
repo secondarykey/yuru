@@ -12,9 +12,8 @@ func calcMax() {
 
 	for d := 0; d < 10; d++ {
 		n := 0
-
-		for r := 0; r < R; r++ {
-			for c := 0; c < C; c++ {
+		for r := 0; r < gConf.Board.R; r++ {
+			for c := 0; c < gConf.Board.C; c++ {
 				if G[r][c] == d {
 					n++
 				}
@@ -59,7 +58,7 @@ func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 				nr := curR + DR[i]
 				nc := curC + DC[i]
 
-				if nr < 0 || R <= nr || nc < 0 || C <= nc {
+				if nr < 0 || gConf.Board.R <= nr || nc < 0 || gConf.Board.C <= nc {
 					continue
 				}
 
@@ -96,9 +95,9 @@ func count(p Board) int {
 	res := 0
 	for _, v := range comboMap {
 
-		seen := make([][]bool, R)
-		for r := 0; r < R; r++ {
-			seen[r] = make([]bool, C)
+		seen := make([][]bool, gConf.Board.R)
+		for r := 0; r < gConf.Board.R; r++ {
+			seen[r] = make([]bool, gConf.Board.C)
 		}
 
 		for _, combo := range v {
@@ -113,8 +112,8 @@ func count(p Board) int {
 			}
 		}
 
-		for r := 0; r < R; r++ {
-			for c := 0; c < C; c++ {
+		for r := 0; r < gConf.Board.R; r++ {
+			for c := 0; c < gConf.Board.C; c++ {
 				if seen[r][c] {
 					res++
 					dfs(r, c, seen, d)
@@ -134,16 +133,16 @@ func createComboMap(p Board) map[int][]*Combo {
 
 	rtnMap := make(map[int][]*Combo)
 
-	for r := 0; r < R; r++ {
-		for c := 0; c < C; c++ {
+	for r := 0; r < gConf.Board.R; r++ {
+		for c := 0; c < gConf.Board.C; c++ {
 			if (c == 0 || p[r][c] != p[r][c-1]) && p[r][c] != DONE {
 				nya(p, r, c, r, c, 0, 1, rtnMap)
 			}
 		}
 	}
 
-	for c := 0; c < C; c++ {
-		for r := 0; r < R; r++ {
+	for c := 0; c < gConf.Board.C; c++ {
+		for r := 0; r < gConf.Board.R; r++ {
 			if (r == 0 || p[r][c] != p[r-1][c]) && p[r][c] != DONE {
 				nya(p, r, c, r, c, 1, 0, rtnMap)
 			}
@@ -158,7 +157,7 @@ func nya(p Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
 	nr := cr + dr
 	nc := cc + dc
 
-	if nr < R && nc < C && p[nr][nc] == p[sr][sc] {
+	if nr < gConf.Board.R && nc < gConf.Board.C && p[nr][nc] == p[sr][sc] {
 		nya(p, sr, sc, nr, nc, dr, dc, rtnMap)
 	} else {
 		dist := (cr-sr+1)*dr + (cc-sc+1)*dc
@@ -197,7 +196,7 @@ func dfs(r, c int, seen [][]bool, p Board) {
 		nr := r + DR[i]
 		nc := c + DC[i]
 
-		if nr < 0 || R <= nr || nc < 0 || C <= nc {
+		if nr < 0 || gConf.Board.R <= nr || nc < 0 || gConf.Board.C <= nc {
 			continue
 		}
 
@@ -208,9 +207,9 @@ func dfs(r, c int, seen [][]bool, p Board) {
 }
 
 func down(p Board) int {
-	for c := 0; c < C; c++ {
-		for d := 0; d < R; d++ {
-			for r := 0; r < R-1; r++ {
+	for c := 0; c < gConf.Board.C; c++ {
+		for d := 0; d < gConf.Board.R; d++ {
+			for r := 0; r < gConf.Board.R-1; r++ {
 				if p[r+1][c] == DONE {
 					p[r][c], p[r+1][c] = p[r+1][c], p[r][c]
 				}
