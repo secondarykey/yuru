@@ -32,7 +32,6 @@ func max(c int) bool {
 // B = Beam
 func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 
-	wg.Add(1)
 	q := make(Queue, 0)
 	initial := NewState(r, c, 0, nil, G.Copy())
 

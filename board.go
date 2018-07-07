@@ -21,6 +21,7 @@ const (
 
 const DONE = -1
 
+//コピーで行う
 func (b Board) Copy() Board {
 	rtn := make(Board, len(b))
 
@@ -31,6 +32,7 @@ func (b Board) Copy() Board {
 	return rtn
 }
 
+//盤面表示
 func (b Board) Print() {
 
 	fmt.Println("    1 2 3 4 5 6")

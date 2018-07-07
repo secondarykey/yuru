@@ -51,13 +51,26 @@ func search(T, B int) *State {
 
 	fmt.Printf("Turn:%d-Beam:%d-------------\n", T, B)
 	fmt.Println(time.Now())
-	res := NewState(-1, -1, 0, nil, G)
+	res := NewState(1, 4, 0, nil, G)
 
 	wg := &sync.WaitGroup{}
 	ch := make(chan *State, gConf.Board.R*gConf.Board.C)
 
-	for sr := 0; sr < gConf.Board.R; sr++ {
-		for sc := 0; sc < gConf.Board.C; sc++ {
+        startR := 0
+        startC := 0
+        endR := gConf.Board.R
+        endC := gConf.Board.C
+
+	if true {
+            startR = 2
+            startC = 5
+            endR = startR + 1
+            endC = startC + 1
+	}
+
+	for sr := startR; sr < endR; sr++ {
+		for sc := startC; sc < endC; sc++ {
+			wg.Add(1)
 			go analysis(T, B, sr, sc, wg, ch)
 		}
 	}
