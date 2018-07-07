@@ -61,12 +61,15 @@ func search(T, B int) *State {
         endR := gConf.Board.R
         endC := gConf.Board.C
 
-	if true {
-            startR = 2
-            startC = 5
+	if gConf.StartR > 0 {
+            startR = gConf.StartR-1
             endR = startR + 1
-            endC = startC + 1
 	}
+
+	if gConf.StartC > 0 {
+            startC = gConf.StartC-1
+            endC = startC + 1
+        }
 
 	for sr := startR; sr < endR; sr++ {
 		for sc := startC; sc < endC; sc++ {

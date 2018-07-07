@@ -24,6 +24,8 @@ var (
 
 type Config struct {
 	Max   bool      `xml:"max,attr"`
+	StartR int      `xml:"startR,attr"`
+	StartC int      `xml:"startC,attr"`
 	Turn  int       `xml:"turn"`
 	Beam  int       `xml:"beam"`
 	Board BoardInfo `xml:"board"`
@@ -51,11 +53,17 @@ func initialize(file string) error {
 		return err
 	}
 
+	//始点指示がおかしい
+	if conf.StartR < 0 || conf.StartR > conf.Board.R ||
+	   conf.StartC < 0 || conf.StartC > conf.Board.C {
+	   return fmt.Errorf("start R,C error")
+	}
+
+        //盤面データの生成
 	G = make([][]int, conf.Board.R)
 	for idx := 0; idx < conf.Board.R; idx++ {
 		G[idx] = make([]int, conf.Board.C)
 	}
-
 	idx := 0
 	r := csv.NewReader(strings.NewReader(conf.Board.B))
 	for {
@@ -89,7 +97,6 @@ func initialize(file string) error {
 		}
 		idx++
 	}
-
 	gConf = &conf
 
 	return nil
