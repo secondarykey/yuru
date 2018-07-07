@@ -1,80 +1,38 @@
-package main
+package yuru
 
 import (
-	"fmt"
-	"os"
 	"sync"
-	"time"
 )
 
-func init() {
-	fmt.Println("初期盤面------------------")
-
-}
-
-func main() {
-
-	cmds := os.Args
-	var conf string
-	if len(cmds) > 2 {
-		conf = cmds[1]
-	}
-
-	//ファイルの指定
-	if conf == "" {
-		conf = "yuru.xml"
-	}
-
-	err := initialize(conf)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	G.Print()
-	calcMax()
-
-	rtn := search(gConf.Turn, gConf.Beam)
-	rtn.Print()
-
-	//再検索を行うかを判定
-
-	if !max(rtn.combo) {
-		fmt.Println("最大コンボが見つからなかったので、再検索するとかも可能にする")
-		//rtn = search(BT*2, BB*2)
-		//rtn.Print()
-	}
-}
-
 // T = Turn , B = Beam
-func search(T, B int) *State {
+func Search(conf *Config) (*State,error) {
 
-	fmt.Printf("Turn:%d-Beam:%d-------------\n", T, B)
-	fmt.Println(time.Now())
-	res := NewState(1, 4, 0, nil, G)
+	res := NewState(-1, -1, 0, nil, conf.BoardData,conf)
+
+	T := conf.Turn
+	B := conf.Beam
 
 	wg := &sync.WaitGroup{}
-	ch := make(chan *State, gConf.Board.R*gConf.Board.C)
+	ch := make(chan *State, conf.Board.R*conf.Board.C)
 
         startR := 0
         startC := 0
-        endR := gConf.Board.R
-        endC := gConf.Board.C
+        endR := conf.Board.R
+        endC := conf.Board.C
 
-	if gConf.StartR > 0 {
-            startR = gConf.StartR-1
+	if conf.StartR > 0 {
+            startR = conf.StartR-1
             endR = startR + 1
 	}
-
-	if gConf.StartC > 0 {
-            startC = gConf.StartC-1
+	if conf.StartC > 0 {
+            startC = conf.StartC-1
             endC = startC + 1
         }
 
 	for sr := startR; sr < endR; sr++ {
 		for sc := startC; sc < endC; sc++ {
 			wg.Add(1)
-			go analysis(T, B, sr, sc, wg, ch)
+			go analysis(T, B, sr, sc, conf, wg, ch)
 		}
 	}
 
@@ -87,6 +45,5 @@ func search(T, B int) *State {
 		}
 	}
 
-	fmt.Println(time.Now())
-	return res
+	return res,nil
 }

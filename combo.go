@@ -1,4 +1,4 @@
-package main
+package yuru
 
 type Combo struct {
 	startR    int

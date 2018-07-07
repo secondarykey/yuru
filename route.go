@@ -1,7 +1,8 @@
-package main
+package yuru
 
 import (
 	"fmt"
+	"bytes"
 )
 
 type Route []int
@@ -12,10 +13,12 @@ func (r Route) Copy() []int {
 	return rtn
 }
 
-func (r Route) Print() {
-	fmt.Printf("route:%d[", len(r))
+func (r Route) String() string {
+	rtn := bytes.NewBuffer(make([]byte,0,100))
+	rtn.WriteString(fmt.Sprintf("route:%d[", len(r)))
 	for _, elm := range r {
-		fmt.Printf(string(DIRECTION[elm]))
+		rtn.WriteString(fmt.Sprintf(string(DIRECTION[elm])))
 	}
-	fmt.Printf("]")
+	rtn.WriteString(fmt.Sprintf("]"))
+	return rtn.String()
 }

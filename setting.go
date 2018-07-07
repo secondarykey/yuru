@@ -1,4 +1,4 @@
-package main
+package yuru
 
 import (
 	"encoding/csv"
@@ -14,8 +14,6 @@ const (
 	DIRECTION = "NESW"
 )
 
-var G Board
-
 var (
 	DR [4]int = [4]int{-1, 0, 1, 0}
 	DC [4]int = [4]int{0, 1, 0, -1}
@@ -29,6 +27,8 @@ type Config struct {
 	Turn  int       `xml:"turn"`
 	Beam  int       `xml:"beam"`
 	Board BoardInfo `xml:"board"`
+
+	BoardData Board
 }
 
 type BoardInfo struct {
@@ -37,33 +37,32 @@ type BoardInfo struct {
 	B string `xml:",chardata"`
 }
 
-var gConf *Config
-
-func initialize(file string) error {
+func LoadConfig(file string) (*Config,error) {
 
 	var conf Config
 
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
-		return err
+		return nil,err
 	}
 
 	err = xml.Unmarshal(data, &conf)
 	if err != nil {
-		return err
+		return nil,err
 	}
 
 	//始点指示がおかしい
 	if conf.StartR < 0 || conf.StartR > conf.Board.R ||
 	   conf.StartC < 0 || conf.StartC > conf.Board.C {
-	   return fmt.Errorf("start R,C error")
+	   return nil,fmt.Errorf("start R,C error")
 	}
 
         //盤面データの生成
-	G = make([][]int, conf.Board.R)
+	board := make([][]int, conf.Board.R)
 	for idx := 0; idx < conf.Board.R; idx++ {
-		G[idx] = make([]int, conf.Board.C)
+		board[idx] = make([]int, conf.Board.C)
 	}
+
 	idx := 0
 	r := csv.NewReader(strings.NewReader(conf.Board.B))
 	for {
@@ -82,22 +81,22 @@ func initialize(file string) error {
 		}
 
 		if len(record) > conf.Board.C {
-			return fmt.Errorf("Error CSV Format C[%d],%v", len(record), record)
+			return nil,fmt.Errorf("Error CSV Format C[%d],%v", len(record), record)
 		}
 
 		if idx >= conf.Board.R {
-			return fmt.Errorf("Error CSV Format R[%d]", idx)
+			return nil,fmt.Errorf("Error CSV Format R[%d]", idx)
 		}
 
 		for c := 0; c < conf.Board.C; c++ {
-			G[idx][c], err = strconv.Atoi(strings.Trim(record[c], " "))
+			board[idx][c], err = strconv.Atoi(strings.Trim(record[c], " "))
 			if err != nil {
-				return fmt.Errorf("Error CSV Data Format [%s]", record[c])
+				return nil,fmt.Errorf("Error CSV Data Format [%s]", record[c])
 			}
 		}
 		idx++
 	}
-	gConf = &conf
+	conf.BoardData = board
 
-	return nil
+	return &conf,nil
 }

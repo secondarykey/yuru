@@ -1,7 +1,8 @@
-package main
+package yuru
 
 import (
 	"fmt"
+	"bytes"
 )
 
 type Board [][]int
@@ -33,17 +34,19 @@ func (b Board) Copy() Board {
 }
 
 //盤面表示
-func (b Board) Print() {
+func (b Board) String() string {
 
-	fmt.Println("    1 2 3 4 5 6")
-	fmt.Println("------------------")
+	rtn := bytes.NewBuffer(make([]byte,0,200))
+	rtn.WriteString(fmt.Sprintln("    1 2 3 4 5 6"))
+	rtn.WriteString(fmt.Sprintln("------------------"))
 	for r := range b {
-		fmt.Printf("%d | ", r+1)
+		rtn.WriteString(fmt.Sprintf("%d | ", r+1))
 
 		for c := range b[r] {
-			fmt.Printf("%d ", b[r][c])
+			rtn.WriteString(fmt.Sprintf("%d ", b[r][c]))
 		}
-		fmt.Println("")
+		rtn.WriteString(fmt.Sprintln(""))
 	}
-	fmt.Println("------------------")
+	rtn.WriteString(fmt.Sprintln("------------------"))
+	return rtn.String()
 }

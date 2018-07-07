@@ -1,39 +1,32 @@
-package main
+package yuru
 
 import (
 	"container/heap"
-	"fmt"
 	"sync"
 )
 
-var gMax int = 0
-
-func calcMax() {
-
+func Max(conf *Config) int {
+	max := 0
 	for d := 0; d < 10; d++ {
 		n := 0
-		for r := 0; r < gConf.Board.R; r++ {
-			for c := 0; c < gConf.Board.C; c++ {
-				if G[r][c] == d {
+		for r := 0; r < conf.Board.R; r++ {
+			for c := 0; c < conf.Board.C; c++ {
+				if conf.BoardData[r][c] == d {
 					n++
 				}
 			}
 		}
-		gMax += +n / 3
+		max += +n / 3
 	}
-	fmt.Printf("最大コンボ:%d\n", gMax)
-}
-
-func max(c int) bool {
-	return c == gMax
+	return max
 }
 
 // T = Turn
 // B = Beam
-func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
+func analysis(T, B, r, c int,conf *Config,wg *sync.WaitGroup, ch chan *State) {
 
 	q := make(Queue, 0)
-	initial := NewState(r, c, 0, nil, G.Copy())
+	initial := NewState(r, c, 0, nil, conf.BoardData.Copy(),conf)
 
 	heap.Push(&q, initial)
 	bestQ := make(Queue, 0)
@@ -57,7 +50,7 @@ func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 				nr := curR + DR[i]
 				nc := curC + DC[i]
 
-				if nr < 0 || gConf.Board.R <= nr || nc < 0 || gConf.Board.C <= nc {
+				if nr < 0 || conf.Board.R <= nr || nc < 0 || conf.Board.C <= nc {
 					continue
 				}
 
@@ -69,7 +62,7 @@ func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 				tG := curG.Copy()
 				tG[curR][curC], tG[nr][nc] = tG[nr][nc], tG[curR][curC]
 
-				ns := NewState(nr, nc, turn+1, Route(nsRoute), tG)
+				ns := NewState(nr, nc, turn+1, Route(nsRoute), tG,conf)
 				heap.Push(&nq, ns)
 			}
 		}
@@ -86,17 +79,17 @@ func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 	wg.Done()
 }
 
-func count(p Board) int {
+func count(p Board,conf *Config) int {
 
-	comboMap := createComboMap(p)
+	comboMap := createComboMap(p,conf)
 
 	d := p.Copy()
 	res := 0
 	for _, v := range comboMap {
 
-		seen := make([][]bool, gConf.Board.R)
-		for r := 0; r < gConf.Board.R; r++ {
-			seen[r] = make([]bool, gConf.Board.C)
+		seen := make([][]bool, conf.Board.R)
+		for r := 0; r < conf.Board.R; r++ {
+			seen[r] = make([]bool, conf.Board.C)
 		}
 
 		for _, combo := range v {
@@ -111,39 +104,39 @@ func count(p Board) int {
 			}
 		}
 
-		for r := 0; r < gConf.Board.R; r++ {
-			for c := 0; c < gConf.Board.C; c++ {
+		for r := 0; r < conf.Board.R; r++ {
+			for c := 0; c < conf.Board.C; c++ {
 				if seen[r][c] {
 					res++
-					dfs(r, c, seen, d)
+					dfs(r, c, seen, d,conf)
 				}
 			}
 		}
 	}
 
 	if res != 0 {
-		res += down(d)
+		res += down(d,conf)
 	}
 
 	return res
 }
 
-func createComboMap(p Board) map[int][]*Combo {
+func createComboMap(p Board,conf *Config) map[int][]*Combo {
 
 	rtnMap := make(map[int][]*Combo)
 
-	for r := 0; r < gConf.Board.R; r++ {
-		for c := 0; c < gConf.Board.C; c++ {
+	for r := 0; r < conf.Board.R; r++ {
+		for c := 0; c < conf.Board.C; c++ {
 			if (c == 0 || p[r][c] != p[r][c-1]) && p[r][c] != DONE {
-				nya(p, r, c, r, c, 0, 1, rtnMap)
+				nya(p, r, c, r, c, 0, 1, conf,rtnMap)
 			}
 		}
 	}
 
-	for c := 0; c < gConf.Board.C; c++ {
-		for r := 0; r < gConf.Board.R; r++ {
+	for c := 0; c < conf.Board.C; c++ {
+		for r := 0; r < conf.Board.R; r++ {
 			if (r == 0 || p[r][c] != p[r-1][c]) && p[r][c] != DONE {
-				nya(p, r, c, r, c, 1, 0, rtnMap)
+				nya(p, r, c, r, c, 1, 0, conf,rtnMap)
 			}
 		}
 	}
@@ -151,13 +144,13 @@ func createComboMap(p Board) map[int][]*Combo {
 	return rtnMap
 }
 
-func nya(p Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
+func nya(p Board, sr, sc, cr, cc, dr, dc int, conf *Config,rtnMap map[int][]*Combo) {
 
 	nr := cr + dr
 	nc := cc + dc
 
-	if nr < gConf.Board.R && nc < gConf.Board.C && p[nr][nc] == p[sr][sc] {
-		nya(p, sr, sc, nr, nc, dr, dc, rtnMap)
+	if nr < conf.Board.R && nc < conf.Board.C && p[nr][nc] == p[sr][sc] {
+		nya(p, sr, sc, nr, nc, dr, dc, conf,rtnMap)
 	} else {
 		dist := (cr-sr+1)*dr + (cc-sc+1)*dc
 
@@ -185,7 +178,7 @@ func nya(p Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
 	}
 }
 
-func dfs(r, c int, seen [][]bool, p Board) {
+func dfs(r, c int, seen [][]bool, p Board,conf *Config) {
 
 	seen[r][c] = false
 	p[r][c] = DONE
@@ -195,25 +188,25 @@ func dfs(r, c int, seen [][]bool, p Board) {
 		nr := r + DR[i]
 		nc := c + DC[i]
 
-		if nr < 0 || gConf.Board.R <= nr || nc < 0 || gConf.Board.C <= nc {
+		if nr < 0 || conf.Board.R <= nr || nc < 0 || conf.Board.C <= nc {
 			continue
 		}
 
 		if seen[nr][nc] {
-			dfs(nr, nc, seen, p)
+			dfs(nr, nc, seen, p,conf)
 		}
 	}
 }
 
-func down(p Board) int {
-	for c := 0; c < gConf.Board.C; c++ {
-		for d := 0; d < gConf.Board.R; d++ {
-			for r := 0; r < gConf.Board.R-1; r++ {
+func down(p Board,conf *Config) int {
+	for c := 0; c < conf.Board.C; c++ {
+		for d := 0; d < conf.Board.R; d++ {
+			for r := 0; r < conf.Board.R-1; r++ {
 				if p[r+1][c] == DONE {
 					p[r][c], p[r+1][c] = p[r+1][c], p[r][c]
 				}
 			}
 		}
 	}
-	return count(p)
+	return count(p,conf)
 }

@@ -1,7 +1,8 @@
-package main
+package yuru
 
 import (
 	"fmt"
+	"bytes"
 )
 
 type State struct {
@@ -18,14 +19,14 @@ type State struct {
 
 type Queue []*State
 
-func NewState(r, c, turn int, route Route, P Board) *State {
+func NewState(r, c, turn int, route Route,P Board,conf *Config) *State {
 
 	s := State{
 		nowR: r,
 		nowC: c,
 		turn: turn,
 	}
-	s.combo = count(P)
+	s.combo = count(P,conf)
 
 	if route == nil {
 		s.route = make(Route, 0)
@@ -35,6 +36,9 @@ func NewState(r, c, turn int, route Route, P Board) *State {
 	s.G = P
 
 	return &s
+}
+func (s *State) Max(max int) bool {
+	return max == s.combo
 }
 
 func (s *State) Less(t *State) bool {
@@ -46,13 +50,19 @@ func (s *State) Less(t *State) bool {
 	return false
 }
 
-func (s *State) Print() {
+func (s *State) String() string {
+	rtn := bytes.NewBuffer(make([]byte,0,200))
 
-	s.G.Print()
-	fmt.Printf("Start(%d,%d)-End(%d,%d)\n", s.startR+1, s.startC+1, s.nowR+1, s.nowC+1)
-	s.route.Print()
-	fmt.Println()
-	fmt.Printf("combo:%d\n", s.combo)
+	rtn.WriteString(fmt.Sprintf("Start(%d,%d)-End(%d,%d)", s.startR+1, s.startC+1, s.nowR+1, s.nowC+1))
+	rtn.WriteString(fmt.Sprintln())
+	rtn.WriteString(s.route.String())
+	rtn.WriteString(fmt.Sprintln())
+	rtn.WriteString(fmt.Sprintf("combo:%d", s.combo))
+
+	rtn.WriteString(fmt.Sprintln())
+	rtn.WriteString(fmt.Sprintln())
+	rtn.WriteString(s.G.String())
+	return rtn.String()
 }
 
 func (q Queue) Len() int {
