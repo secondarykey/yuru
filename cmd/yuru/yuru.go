@@ -14,7 +14,7 @@ func main() {
 
 	cmds := os.Args
 	var name string
-	if len(cmds) > 2 {
+	if len(cmds) >= 2 {
 		name = cmds[1]
 	}
 
@@ -23,16 +23,15 @@ func main() {
 		name = "yuru.xml"
 	}
 
-	conf,err := yuru.LoadConfig(name)
+	conf, err := yuru.LoadConfig(name)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 	fmt.Println(conf.BoardData)
 
 	max := yuru.Max(conf)
-	result,err := yuru.Search(conf)
+	result, err := yuru.Search(conf)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -45,4 +44,3 @@ func main() {
 		fmt.Println("最大コンボが見つからなかったので、再検索するとかも可能にする")
 	}
 }
-

@@ -5,9 +5,9 @@ import (
 )
 
 // T = Turn , B = Beam
-func Search(conf *Config) (*State,error) {
+func Search(conf *Config) (*State, error) {
 
-	res := NewState(-1, -1, 0, nil, conf.BoardData,conf)
+	res := NewState(-1, -1, 0, nil, conf.BoardData, conf)
 
 	T := conf.Turn
 	B := conf.Beam
@@ -15,19 +15,19 @@ func Search(conf *Config) (*State,error) {
 	wg := &sync.WaitGroup{}
 	ch := make(chan *State, conf.Board.R*conf.Board.C)
 
-        startR := 0
-        startC := 0
-        endR := conf.Board.R
-        endC := conf.Board.C
+	startR := 0
+	startC := 0
+	endR := conf.Board.R
+	endC := conf.Board.C
 
 	if conf.StartR > 0 {
-            startR = conf.StartR-1
-            endR = startR + 1
+		startR = conf.StartR - 1
+		endR = startR + 1
 	}
 	if conf.StartC > 0 {
-            startC = conf.StartC-1
-            endC = startC + 1
-        }
+		startC = conf.StartC - 1
+		endC = startC + 1
+	}
 
 	for sr := startR; sr < endR; sr++ {
 		for sc := startC; sc < endC; sc++ {
@@ -45,5 +45,5 @@ func Search(conf *Config) (*State,error) {
 		}
 	}
 
-	return res,nil
+	return res, nil
 }
