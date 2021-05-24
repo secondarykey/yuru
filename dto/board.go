@@ -1,4 +1,4 @@
-package yuru
+package dto
 
 import (
 	"bytes"
@@ -6,6 +6,12 @@ import (
 )
 
 type Board [][]int
+
+type BoardInfo struct {
+	R int    `xml:"r,attr"`
+	C int    `xml:"c,attr"`
+	B string `xml:",chardata"`
+}
 
 const (
 	HEART = iota * 10
@@ -19,8 +25,6 @@ const (
 	DEADLY
 	BOMB
 )
-
-const DONE = -1
 
 //コピーで行う
 func (b Board) Copy() Board {

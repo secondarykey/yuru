@@ -3,24 +3,28 @@ package yuru
 import (
 	"fmt"
 
+	"github.com/secondarykey/yuru/config"
+	"github.com/secondarykey/yuru/logic"
+
 	"golang.org/x/xerrors"
 )
 
 func Print(name string) error {
 
-	conf, err := LoadConfig(name)
+	err := config.Set(name)
 	if err != nil {
-		return xerrors.Errorf("config.Load() error: %w", err)
+		return xerrors.Errorf("config.Set() error: %w", err)
 	}
+
+	conf := config.Get()
 
 	fmt.Println(conf.BoardData)
 
-	max := Max(conf)
-	result, err := Search(conf)
+	max := logic.Max()
+	result, err := logic.Search()
 	if err != nil {
 		return xerrors.Errorf("yuru.Search() error: %w", err)
 	}
-
 	fmt.Println(result)
 
 	//再検索を行うかを判定

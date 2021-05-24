@@ -1,8 +1,8 @@
-package yuru
+package logic
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 )
 
 type Route []int
@@ -14,7 +14,7 @@ func (r Route) Copy() []int {
 }
 
 func (r Route) String() string {
-	rtn := bytes.NewBuffer(make([]byte,0,100))
+	rtn := bytes.NewBuffer(make([]byte, 0, 100))
 	rtn.WriteString(fmt.Sprintf("route:%d[", len(r)))
 	for _, elm := range r {
 		rtn.WriteString(fmt.Sprintf(string(DIRECTION[elm])))

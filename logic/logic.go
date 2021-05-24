@@ -1,11 +1,28 @@
-package yuru
+package logic
 
 import (
 	"container/heap"
 	"sync"
+
+	"github.com/secondarykey/yuru/config"
+	"github.com/secondarykey/yuru/dto"
 )
 
-func Max(conf *Config) int {
+const (
+	DIRECTION = "NESW"
+	DONE      = -1
+)
+
+var (
+	DR [4]int = [4]int{-1, 0, 1, 0}
+	DC [4]int = [4]int{0, 1, 0, -1}
+	N  int    = len(DR)
+)
+
+func Max() int {
+
+	conf := config.Get()
+
 	max := 0
 	for d := 0; d < 10; d++ {
 		n := 0
@@ -21,12 +38,60 @@ func Max(conf *Config) int {
 	return max
 }
 
+// T = Turn , B = Beam
+func Search() (*State, error) {
+
+	conf := config.Get()
+
+	res := NewState(-1, -1, 0, nil, conf.BoardData)
+
+	T := conf.Turn
+	B := conf.Beam
+
+	wg := &sync.WaitGroup{}
+	ch := make(chan *State, conf.Board.R*conf.Board.C)
+
+	startR := 0
+	startC := 0
+	endR := conf.Board.R
+	endC := conf.Board.C
+
+	if conf.StartR > 0 {
+		startR = conf.StartR - 1
+		endR = startR + 1
+	}
+	if conf.StartC > 0 {
+		startC = conf.StartC - 1
+		endC = startC + 1
+	}
+
+	for sr := startR; sr < endR; sr++ {
+		for sc := startC; sc < endC; sc++ {
+			wg.Add(1)
+			go analysis(T, B, sr, sc, wg, ch)
+		}
+	}
+
+	wg.Wait()
+	close(ch)
+
+	for s := range ch {
+		if !res.Less(s) {
+			res = s
+		}
+	}
+
+	return res, nil
+}
+
 // T = Turn
 // B = Beam
-func analysis(T, B, r, c int,conf *Config,wg *sync.WaitGroup, ch chan *State) {
+func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
+
+	conf := config.Get()
 
 	q := make(Queue, 0)
-	initial := NewState(r, c, 0, nil, conf.BoardData.Copy(),conf)
+	initial := NewState(r, c, 0, nil, conf.BoardData.Copy())
 
 	heap.Push(&q, initial)
 	bestQ := make(Queue, 0)
@@ -62,7 +127,7 @@ func analysis(T, B, r, c int,conf *Config,wg *sync.WaitGroup, ch chan *State) {
 				tG := curG.Copy()
 				tG[curR][curC], tG[nr][nc] = tG[nr][nc], tG[curR][curC]
 
-				ns := NewState(nr, nc, turn+1, Route(nsRoute), tG,conf)
+				ns := NewState(nr, nc, turn+1, Route(nsRoute), tG)
 				heap.Push(&nq, ns)
 			}
 		}
@@ -79,9 +144,10 @@ func analysis(T, B, r, c int,conf *Config,wg *sync.WaitGroup, ch chan *State) {
 	wg.Done()
 }
 
-func count(p Board,conf *Config) int {
+func count(p dto.Board) int {
 
-	comboMap := createComboMap(p,conf)
+	conf := config.Get()
+	comboMap := createComboMap(p)
 
 	d := p.Copy()
 	res := 0
@@ -108,27 +174,28 @@ func count(p Board,conf *Config) int {
 			for c := 0; c < conf.Board.C; c++ {
 				if seen[r][c] {
 					res++
-					dfs(r, c, seen, d,conf)
+					dfs(r, c, seen, d)
 				}
 			}
 		}
 	}
 
 	if res != 0 {
-		res += down(d,conf)
+		res += down(d)
 	}
 
 	return res
 }
 
-func createComboMap(p Board,conf *Config) map[int][]*Combo {
+func createComboMap(p dto.Board) map[int][]*Combo {
 
+	conf := config.Get()
 	rtnMap := make(map[int][]*Combo)
 
 	for r := 0; r < conf.Board.R; r++ {
 		for c := 0; c < conf.Board.C; c++ {
 			if (c == 0 || p[r][c] != p[r][c-1]) && p[r][c] != DONE {
-				nya(p, r, c, r, c, 0, 1, conf,rtnMap)
+				nya(p, r, c, r, c, 0, 1, rtnMap)
 			}
 		}
 	}
@@ -136,7 +203,7 @@ func createComboMap(p Board,conf *Config) map[int][]*Combo {
 	for c := 0; c < conf.Board.C; c++ {
 		for r := 0; r < conf.Board.R; r++ {
 			if (r == 0 || p[r][c] != p[r-1][c]) && p[r][c] != DONE {
-				nya(p, r, c, r, c, 1, 0, conf,rtnMap)
+				nya(p, r, c, r, c, 1, 0, rtnMap)
 			}
 		}
 	}
@@ -144,13 +211,14 @@ func createComboMap(p Board,conf *Config) map[int][]*Combo {
 	return rtnMap
 }
 
-func nya(p Board, sr, sc, cr, cc, dr, dc int, conf *Config,rtnMap map[int][]*Combo) {
+func nya(p dto.Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
 
+	conf := config.Get()
 	nr := cr + dr
 	nc := cc + dc
 
 	if nr < conf.Board.R && nc < conf.Board.C && p[nr][nc] == p[sr][sc] {
-		nya(p, sr, sc, nr, nc, dr, dc, conf,rtnMap)
+		nya(p, sr, sc, nr, nc, dr, dc, rtnMap)
 	} else {
 		dist := (cr-sr+1)*dr + (cc-sc+1)*dc
 
@@ -178,8 +246,9 @@ func nya(p Board, sr, sc, cr, cc, dr, dc int, conf *Config,rtnMap map[int][]*Com
 	}
 }
 
-func dfs(r, c int, seen [][]bool, p Board,conf *Config) {
+func dfs(r, c int, seen [][]bool, p dto.Board) {
 
+	conf := config.Get()
 	seen[r][c] = false
 	p[r][c] = DONE
 
@@ -193,12 +262,13 @@ func dfs(r, c int, seen [][]bool, p Board,conf *Config) {
 		}
 
 		if seen[nr][nc] {
-			dfs(nr, nc, seen, p,conf)
+			dfs(nr, nc, seen, p)
 		}
 	}
 }
 
-func down(p Board,conf *Config) int {
+func down(p dto.Board) int {
+	conf := config.Get()
 	for c := 0; c < conf.Board.C; c++ {
 		for d := 0; d < conf.Board.R; d++ {
 			for r := 0; r < conf.Board.R-1; r++ {
@@ -208,5 +278,5 @@ func down(p Board,conf *Config) int {
 			}
 		}
 	}
-	return count(p,conf)
+	return count(p)
 }
