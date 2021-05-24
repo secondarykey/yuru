@@ -1,4 +1,4 @@
-package yuru
+package logic
 
 type Combo struct {
 	startR    int

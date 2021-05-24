@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -12,35 +13,18 @@ func init() {
 
 func main() {
 
-	cmds := os.Args
-	var name string
-	if len(cmds) >= 2 {
-		name = cmds[1]
+	flag.Parse()
+	args := flag.Args()
+
+	name := ""
+	if len(args) >= 1 {
+		name = args[0]
 	}
 
-	//ファイルの指定
-	if name == "" {
-		name = "yuru.xml"
-	}
-
-	conf, err := yuru.LoadConfig(name)
+	err := yuru.Print(name)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "yuru print error:\n%+v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println(conf.BoardData)
-
-	max := yuru.Max(conf)
-	result, err := yuru.Search(conf)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println(result)
-
-	//再検索を行うかを判定
-	if !result.Max(max) {
-		fmt.Println("最大コンボが見つからなかったので、再検索するとかも可能にする")
-	}
+	fmt.Fprintf(os.Stdout, "Success")
 }

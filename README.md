@@ -1,36 +1,23 @@
-ユルを倒す為に作られたツールです
-
-ユル討伐時は爆弾の処理などツギハギで実装していたものを
-より高速にしたものになっています
-落としの実装により、かなり高速に算出できるようになりました
+It's a tool for that game that I found someday.
+Born to defeat "Yuru". 
 
     go get github.com/secondarykey/yuru
     go install github.com/secondarykey/yuru/cmd/yuru
 
-でインストールします
+The previous logic was tagged as v0.
+(https://github.com/secondarykey/yuru/tree/v0.0.0)
 
-$GOPATH/bin/yuru [config file]
+We are planning to implement UI mode with "v2", and we will create "v1" in preparation for it.
 
-で実行します
-ファイルを省略するとその場にあるyuru.xml を設定ファイルとして動作します
 
-github.com/secondarykey/yuru/cmd/yuru/yuru.xml
+# v2に向けて変更していく点
 
-が設定ファイルの例です
+- 既存コマンドをyuru-cuiにする
+- 設定ファイルをHOME(USERPROFILE)に作成
+- ドロップの属性を10,20,,,にする
+- ボードデータをパッケージ化
 
-```xml
-<yuru max="true" startR="0" startC="0">
-  <turn>50</turn>                                                             
-  <beam>50</beam>
-  <board r="5" c="6">
-     2,5,5,3,2,1
-     4,0,5,1,5,2
-     2,5,5,3,2,1
-     2,5,5,3,2,1
-     2,5,5,3,2,1
-  </board>
-</yuru>
-```
+# 設定ファイル
 
 yuru max  = 最大コンボでない場合に再度計算するか？(未実装
 yuru startR = 開始位置を指定します(1行目なら1)

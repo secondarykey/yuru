@@ -1,8 +1,10 @@
-package yuru
+package logic
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
+
+	"github.com/secondarykey/yuru/dto"
 )
 
 type State struct {
@@ -10,7 +12,7 @@ type State struct {
 	nowR  int
 	nowC  int
 	route Route
-	G     Board
+	G     dto.Board
 	turn  int
 
 	startR int
@@ -19,14 +21,14 @@ type State struct {
 
 type Queue []*State
 
-func NewState(r, c, turn int, route Route,P Board,conf *Config) *State {
+func NewState(r, c, turn int, route Route, P dto.Board) *State {
 
 	s := State{
 		nowR: r,
 		nowC: c,
 		turn: turn,
 	}
-	s.combo = count(P,conf)
+	s.combo = count(P)
 
 	if route == nil {
 		s.route = make(Route, 0)
@@ -51,7 +53,7 @@ func (s *State) Less(t *State) bool {
 }
 
 func (s *State) String() string {
-	rtn := bytes.NewBuffer(make([]byte,0,200))
+	rtn := bytes.NewBuffer(make([]byte, 0, 200))
 
 	rtn.WriteString(fmt.Sprintf("Start(%d,%d)-End(%d,%d)", s.startR+1, s.startC+1, s.nowR+1, s.nowC+1))
 	rtn.WriteString(fmt.Sprintln())
