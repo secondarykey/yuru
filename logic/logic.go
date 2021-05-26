@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"sync"
 
-	"github.com/secondarykey/yuru/config"
 	"github.com/secondarykey/yuru/dto"
 )
 
@@ -19,16 +18,14 @@ var (
 	N  int    = len(DR)
 )
 
-func Max() int {
-
-	conf := config.Get()
+func Max(board dto.Board) int {
 
 	max := 0
 	for d := 0; d < 10; d++ {
 		n := 0
-		for r := 0; r < conf.Board.R; r++ {
-			for c := 0; c < conf.Board.C; c++ {
-				if conf.BoardData[r][c] == d {
+		for r := 0; r < board.R(); r++ {
+			for c := 0; c < board.C(); c++ {
+				if board[r][c] == d {
 					n++
 				}
 			}
@@ -39,36 +36,31 @@ func Max() int {
 }
 
 // T = Turn , B = Beam
-func Search() (*State, error) {
+func Search(board dto.Board, T, B, startR, startC int) (*State, error) {
 
-	conf := config.Get()
-
-	res := NewState(-1, -1, 0, nil, conf.BoardData)
-
-	T := conf.Turn
-	B := conf.Beam
+	res := NewState(-1, -1, 0, nil, board)
 
 	wg := &sync.WaitGroup{}
-	ch := make(chan *State, conf.Board.R*conf.Board.C)
+	ch := make(chan *State, board.R()*board.C())
 
-	startR := 0
-	startC := 0
-	endR := conf.Board.R
-	endC := conf.Board.C
+	sR := 0
+	sC := 0
+	eR := board.R()
+	eC := board.C()
 
-	if conf.StartR > 0 {
-		startR = conf.StartR - 1
-		endR = startR + 1
+	if startR > 0 {
+		sR = startR - 1
+		eR = startR + 1
 	}
-	if conf.StartC > 0 {
-		startC = conf.StartC - 1
-		endC = startC + 1
+	if startC > 0 {
+		sC = startC - 1
+		eC = startC + 1
 	}
 
-	for sr := startR; sr < endR; sr++ {
-		for sc := startC; sc < endC; sc++ {
+	for sr := sR; sr < eR; sr++ {
+		for sc := sC; sc < eC; sc++ {
 			wg.Add(1)
-			go analysis(T, B, sr, sc, wg, ch)
+			go analysis(board, T, B, sr, sc, wg, ch)
 		}
 	}
 
@@ -86,12 +78,10 @@ func Search() (*State, error) {
 
 // T = Turn
 // B = Beam
-func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
-
-	conf := config.Get()
+func analysis(board dto.Board, T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 
 	q := make(Queue, 0)
-	initial := NewState(r, c, 0, nil, conf.BoardData.Copy())
+	initial := NewState(r, c, 0, nil, board.Copy())
 
 	heap.Push(&q, initial)
 	bestQ := make(Queue, 0)
@@ -115,7 +105,7 @@ func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 				nr := curR + DR[i]
 				nc := curC + DC[i]
 
-				if nr < 0 || conf.Board.R <= nr || nc < 0 || conf.Board.C <= nc {
+				if nr < 0 || board.R() <= nr || nc < 0 || board.C() <= nc {
 					continue
 				}
 
@@ -146,16 +136,15 @@ func analysis(T, B, r, c int, wg *sync.WaitGroup, ch chan *State) {
 
 func count(p dto.Board) int {
 
-	conf := config.Get()
 	comboMap := createComboMap(p)
 
 	d := p.Copy()
 	res := 0
 	for _, v := range comboMap {
 
-		seen := make([][]bool, conf.Board.R)
-		for r := 0; r < conf.Board.R; r++ {
-			seen[r] = make([]bool, conf.Board.C)
+		seen := make([][]bool, p.R())
+		for r := 0; r < p.R(); r++ {
+			seen[r] = make([]bool, p.C())
 		}
 
 		for _, combo := range v {
@@ -170,8 +159,8 @@ func count(p dto.Board) int {
 			}
 		}
 
-		for r := 0; r < conf.Board.R; r++ {
-			for c := 0; c < conf.Board.C; c++ {
+		for r := 0; r < p.R(); r++ {
+			for c := 0; c < p.C(); c++ {
 				if seen[r][c] {
 					res++
 					dfs(r, c, seen, d)
@@ -189,19 +178,18 @@ func count(p dto.Board) int {
 
 func createComboMap(p dto.Board) map[int][]*Combo {
 
-	conf := config.Get()
 	rtnMap := make(map[int][]*Combo)
 
-	for r := 0; r < conf.Board.R; r++ {
-		for c := 0; c < conf.Board.C; c++ {
+	for r := 0; r < p.R(); r++ {
+		for c := 0; c < p.C(); c++ {
 			if (c == 0 || p[r][c] != p[r][c-1]) && p[r][c] != DONE {
 				nya(p, r, c, r, c, 0, 1, rtnMap)
 			}
 		}
 	}
 
-	for c := 0; c < conf.Board.C; c++ {
-		for r := 0; r < conf.Board.R; r++ {
+	for c := 0; c < p.C(); c++ {
+		for r := 0; r < p.R(); r++ {
 			if (r == 0 || p[r][c] != p[r-1][c]) && p[r][c] != DONE {
 				nya(p, r, c, r, c, 1, 0, rtnMap)
 			}
@@ -213,11 +201,10 @@ func createComboMap(p dto.Board) map[int][]*Combo {
 
 func nya(p dto.Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
 
-	conf := config.Get()
 	nr := cr + dr
 	nc := cc + dc
 
-	if nr < conf.Board.R && nc < conf.Board.C && p[nr][nc] == p[sr][sc] {
+	if nr < p.R() && nc < p.C() && p[nr][nc] == p[sr][sc] {
 		nya(p, sr, sc, nr, nc, dr, dc, rtnMap)
 	} else {
 		dist := (cr-sr+1)*dr + (cc-sc+1)*dc
@@ -248,7 +235,6 @@ func nya(p dto.Board, sr, sc, cr, cc, dr, dc int, rtnMap map[int][]*Combo) {
 
 func dfs(r, c int, seen [][]bool, p dto.Board) {
 
-	conf := config.Get()
 	seen[r][c] = false
 	p[r][c] = DONE
 
@@ -257,7 +243,7 @@ func dfs(r, c int, seen [][]bool, p dto.Board) {
 		nr := r + DR[i]
 		nc := c + DC[i]
 
-		if nr < 0 || conf.Board.R <= nr || nc < 0 || conf.Board.C <= nc {
+		if nr < 0 || p.R() <= nr || nc < 0 || p.C() <= nc {
 			continue
 		}
 
@@ -268,10 +254,9 @@ func dfs(r, c int, seen [][]bool, p dto.Board) {
 }
 
 func down(p dto.Board) int {
-	conf := config.Get()
-	for c := 0; c < conf.Board.C; c++ {
-		for d := 0; d < conf.Board.R; d++ {
-			for r := 0; r < conf.Board.R-1; r++ {
+	for c := 0; c < p.C(); c++ {
+		for d := 0; d < p.R(); d++ {
+			for r := 0; r < p.R()-1; r++ {
 				if p[r+1][c] == DONE {
 					p[r][c], p[r+1][c] = p[r+1][c], p[r][c]
 				}

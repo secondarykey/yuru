@@ -52,10 +52,22 @@ func (s *State) Less(t *State) bool {
 	return false
 }
 
+func (s *State) PositionString() string {
+	return fmt.Sprintf("Start(%d,%d)-End(%d,%d)", s.startR+1, s.startC+1, s.nowR+1, s.nowC+1)
+}
+
+func (s *State) Combo() int {
+	return s.combo
+}
+
+func (s *State) RouteString() string {
+	return s.route.DirectionString()
+}
+
 func (s *State) String() string {
 	rtn := bytes.NewBuffer(make([]byte, 0, 200))
 
-	rtn.WriteString(fmt.Sprintf("Start(%d,%d)-End(%d,%d)", s.startR+1, s.startC+1, s.nowR+1, s.nowC+1))
+	rtn.WriteString(s.PositionString())
 	rtn.WriteString(fmt.Sprintln())
 	rtn.WriteString(s.route.String())
 	rtn.WriteString(fmt.Sprintln())

@@ -3,6 +3,7 @@ package logic
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type Route []int
@@ -13,12 +14,22 @@ func (r Route) Copy() []int {
 	return rtn
 }
 
+func (r Route) DirectionString() string {
+	var builder strings.Builder
+	for _, elm := range r {
+		w := "-"
+		if elm >= 0 {
+			w = string(DIRECTION[elm])
+		}
+		builder.WriteString(w)
+	}
+	return builder.String()
+}
+
 func (r Route) String() string {
 	rtn := bytes.NewBuffer(make([]byte, 0, 100))
 	rtn.WriteString(fmt.Sprintf("route:%d[", len(r)))
-	for _, elm := range r {
-		rtn.WriteString(fmt.Sprintf(string(DIRECTION[elm])))
-	}
-	rtn.WriteString(fmt.Sprintf("]"))
+	rtn.WriteString(r.DirectionString())
+	rtn.WriteString("]")
 	return rtn.String()
 }
