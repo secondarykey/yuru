@@ -1,9 +1,13 @@
 package window
 
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
 //Focus
 //Active
-
-type Tile struct {
+type Component interface {
+	Draw(*ebiten.Image) error
 }
 
 type Focuser interface {

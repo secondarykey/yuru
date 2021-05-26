@@ -21,7 +21,6 @@ func NewSprite(x, y, w, h int, img *ebiten.Image) *Sprite {
 }
 
 func (s *Sprite) in(x, y int) bool {
-
 	if s.x <= x && x <= (s.x+s.w) {
 		if s.y <= y && y <= (s.y+s.h) {
 			return true

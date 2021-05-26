@@ -2,15 +2,17 @@ package window
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"golang.org/x/xerrors"
 )
 
 const (
 	Width  = 600
-	Height = 480
+	Height = 600
 )
 
 type Window struct {
@@ -30,7 +32,7 @@ func New() (*Window, error) {
 }
 
 func (win *Window) Layout(w, h int) (int, int) {
-	return Width, Height
+	return w, h
 }
 
 func (w *Window) Update() error {
@@ -45,6 +47,10 @@ func (w *Window) Update() error {
 }
 
 func (w *Window) Draw(s *ebiten.Image) {
+
+	msg := fmt.Sprintf("TPS = %0.2f\nFPS = %0.2f", ebiten.CurrentTPS(), ebiten.CurrentFPS())
+	ebitenutil.DebugPrint(s, msg)
+
 	op := &ebiten.DrawImageOptions{}
 	err := w.screen.Draw(s)
 	if err != nil {
@@ -52,4 +58,5 @@ func (w *Window) Draw(s *ebiten.Image) {
 	} else {
 		s.DrawImage(w.screen.Get(), op)
 	}
+
 }

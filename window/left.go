@@ -9,6 +9,14 @@ type LeftMenu struct {
 	drops *SelectDrops
 }
 
+type Operation int
+type OperationMode int
+
+const (
+	MoveMode OperationMode = iota
+	EditMode
+)
+
 const (
 	LeftMenuMarginX     = 10
 	LeftMenuMarginY     = 10
@@ -37,7 +45,6 @@ func NewLeftMenu() (*LeftMenu, error) {
 }
 
 func (m *LeftMenu) Update(input *Input) error {
-	m.drops.focus = -1
 	if m.in(input) {
 		return nil
 	}
@@ -45,7 +52,6 @@ func (m *LeftMenu) Update(input *Input) error {
 }
 
 func (m *LeftMenu) in(input *Input) bool {
-
 	if LeftMenuMarginX < input.x && input.x < (DropWidth+LeftMenuMarginX) {
 		if m.drops.in(input) {
 			return true
@@ -60,4 +66,15 @@ func (m *LeftMenu) Draw(back *ebiten.Image) error {
 		return xerrors.Errorf("SelectDrops error: %w", err)
 	}
 	return nil
+}
+
+func (m LeftMenu) Get() Operation {
+	return Operation(m.drops.getActive() * 10)
+}
+
+func (op Operation) GetMode() OperationMode {
+	if op == 0 {
+		return MoveMode
+	}
+	return EditMode
 }
