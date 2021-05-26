@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"runtime"
 
 	"github.com/secondarykey/yuru"
 )
@@ -14,8 +12,7 @@ func main() {
 
 	flag.Parse()
 	args := flag.Args()
-
-	name := filepath.Join(getHome(), ".yuru.xml")
+	name := ""
 	if len(args) >= 1 {
 		name = args[0]
 	}
@@ -27,12 +24,4 @@ func main() {
 	}
 
 	fmt.Fprintf(os.Stdout, "bye!")
-}
-
-func getHome() string {
-	env := "HOME"
-	if runtime.GOOS == "windows" {
-		env = "USERPROFILE"
-	}
-	return os.Getenv(env)
 }
