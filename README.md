@@ -10,6 +10,8 @@ The previous logic was tagged as v0.
 
 We are planning to implement UI mode with "v1".
 
+https://user-images.githubusercontent.com/445407/119734833-7c14df00-beb6-11eb-858d-e97cbd747666.mp4
+
 # 大きく変わった点
 
 - 既存コマンドをyuru-cui
