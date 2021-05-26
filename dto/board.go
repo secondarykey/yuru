@@ -7,24 +7,13 @@ import (
 
 type Board [][]int
 
-type BoardInfo struct {
-	R int    `xml:"r,attr"`
-	C int    `xml:"c,attr"`
-	B string `xml:",chardata"`
+func (b Board) R() int {
+	return len(b)
 }
 
-const (
-	HEART = iota * 10
-	RED
-	BLUE
-	GREEN
-	YELLOW
-	BLACK
-	DISTURB
-	POISON
-	DEADLY
-	BOMB
-)
+func (b Board) C() int {
+	return len(b[0])
+}
 
 //コピーで行う
 func (b Board) Copy() Board {
@@ -40,7 +29,7 @@ func (b Board) Copy() Board {
 //盤面表示
 func (b Board) String() string {
 
-	rtn := bytes.NewBuffer(make([]byte, 0, 200))
+	rtn := bytes.NewBuffer(make([]byte, 0, 256))
 	rtn.WriteString(fmt.Sprintln("     1  2  3  4  5  6"))
 	rtn.WriteString(fmt.Sprintln("-----------------------"))
 	for r := range b {
