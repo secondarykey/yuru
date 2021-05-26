@@ -28,14 +28,20 @@ func init() {
 }
 
 type Config struct {
-	Max    bool          `xml:"max,attr"`
-	StartR int           `xml:"startR,attr"`
-	StartC int           `xml:"startC,attr"`
-	Turn   int           `xml:"turn"`
-	Beam   int           `xml:"beam"`
-	Board  dto.BoardInfo `xml:"board"`
+	Max       bool      `xml:"max,attr"`
+	StartR    int       `xml:"startR,attr"`
+	StartC    int       `xml:"startC,attr"`
+	Turn      int       `xml:"turn"`
+	Beam      int       `xml:"beam"`
+	BoardInfo BoardInfo `xml:"board"`
 
-	BoardData dto.Board
+	defaultData dto.Board
+}
+
+type BoardInfo struct {
+	R int    `xml:"r,attr"`
+	C int    `xml:"c,attr"`
+	B string `xml:",chardata"`
 }
 
 func Get() *Config {
@@ -57,19 +63,19 @@ func Set(f string) error {
 	}
 
 	//始点指示がおかしい
-	if conf.StartR < 0 || conf.StartR > conf.Board.R ||
-		conf.StartC < 0 || conf.StartC > conf.Board.C {
+	if conf.StartR < 0 || conf.StartR > conf.BoardInfo.R ||
+		conf.StartC < 0 || conf.StartC > conf.BoardInfo.C {
 		return fmt.Errorf("start R,C error")
 	}
 
 	//盤面データの生成
-	board := make([][]int, conf.Board.R)
-	for idx := 0; idx < conf.Board.R; idx++ {
-		board[idx] = make([]int, conf.Board.C)
+	board := make([][]int, conf.BoardInfo.R)
+	for idx := 0; idx < conf.BoardInfo.R; idx++ {
+		board[idx] = make([]int, conf.BoardInfo.C)
 	}
 
 	idx := 0
-	r := csv.NewReader(strings.NewReader(conf.Board.B))
+	r := csv.NewReader(strings.NewReader(conf.BoardInfo.B))
 	for {
 		record, err := r.Read()
 
@@ -85,15 +91,15 @@ func Set(f string) error {
 			continue
 		}
 
-		if len(record) > conf.Board.C {
+		if len(record) > conf.BoardInfo.C {
 			return fmt.Errorf("Error CSV Format C[%d],%v", len(record), record)
 		}
 
-		if idx >= conf.Board.R {
+		if idx >= conf.BoardInfo.R {
 			return fmt.Errorf("Error CSV Format R[%d]", idx)
 		}
 
-		for c := 0; c < conf.Board.C; c++ {
+		for c := 0; c < conf.BoardInfo.C; c++ {
 			board[idx][c], err = strconv.Atoi(strings.Trim(record[c], " "))
 			if err != nil {
 				return fmt.Errorf("Error CSV Data Format [%s]", record[c])
@@ -101,11 +107,15 @@ func Set(f string) error {
 		}
 		idx++
 	}
-	conf.BoardData = board
+	conf.defaultData = board
 
 	gConf = &conf
 
 	return nil
+}
+
+func GetDefaultBoard() dto.Board {
+	return gConf.defaultData
 }
 
 func getDefault(name string) ([]byte, error) {
