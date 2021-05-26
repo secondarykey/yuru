@@ -3,19 +3,21 @@ Born to defeat "Yuru".
 
     go get github.com/secondarykey/yuru
     go install github.com/secondarykey/yuru/cmd/yuru
+    go install github.com/secondarykey/yuru/cmd/yuru-cui -> v0 yuru
 
 The previous logic was tagged as v0.
 (https://github.com/secondarykey/yuru/tree/v0.0.0)
 
-We are planning to implement UI mode with "v2", and we will create "v1" in preparation for it.
+We are planning to implement UI mode with "v1".
 
+# 大きく変わった点
 
-# v2に向けて変更していく点
-
-- 既存コマンドをyuru-cuiにする
+- 既存コマンドをyuru-cui
 - 設定ファイルをHOME(USERPROFILE)に作成
-- ドロップの属性を10,20,,,にする
+- ドロップの属性を10の倍数にした
 - ボードデータをパッケージ化
+- 計算はlogic,データはdtoにした。
+- BoardInfoを削除
 
 # 設定ファイル
 
@@ -31,14 +33,15 @@ board tag = 盤面
 盤面数値でドロップを表して、[,]で区切ります
 数値は同じ色を同じ数値にすれば何でもOKです。
 
-考慮してない点
+# 考慮してない点
 
 - 盤面が1面同色でも10コンボで算出してしまう(単純に3の倍数で求めています
 
-やりたいこと
+# やりたいこと
 
 - 盤面の解析を行って盤面を読み込む
 - 2way を調整を可能に
 - 爆弾を必ず消す
-
-コンボ重視、攻撃重視などを設定していけるようにしたいと思っています。
+- 陣機能の作成(Random reset)
+- 保存機能の作成(Save Board)
+- 再生機能の作成(Play Board)
