@@ -11,6 +11,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 	"golang.org/x/xerrors"
 )
 
@@ -24,10 +26,15 @@ func init() {
 	var err error
 	assets, err = fs.Sub(embAssets, "_assets")
 	if err != nil {
-		log.Println(err)
+		log.Println("assets Sub() error:", err)
 	}
 
 	imageCache = make(map[string]image.Image)
+
+	err = initFont()
+	if err != nil {
+		log.Println("loadFont() error:", err)
+	}
 }
 
 func convertImage(img image.Image) *ebiten.Image {
@@ -81,4 +88,49 @@ func loadImage(name string) (image.Image, error) {
 	imageCache[name] = img
 
 	return img, nil
+}
+
+const defaultFontName = "OdibeeSans-Regular.ttf"
+const defaultFontDPI = 72
+const defaultFontSize = 20
+const smallFontSize = 20
+
+var defaultFont font.Face
+var smallFont font.Face
+
+func initFont() error {
+
+	f, err := assets.Open(defaultFontName)
+	if err != nil {
+		return xerrors.Errorf("assets.Open() error: %w", err)
+	}
+
+	info, err := f.Stat()
+	if err != nil {
+		return xerrors.Errorf("file.Stat() error: %w", err)
+	}
+
+	sz := info.Size()
+	data := make([]byte, sz)
+	_, err = f.Read(data)
+	if err != nil {
+		return xerrors.Errorf("file.Read() error: %w", err)
+	}
+
+	font, err := opentype.Parse(data)
+	if err != nil {
+		return xerrors.Errorf("file.Read() error: %w", err)
+	}
+
+	defaultFont, err = opentype.NewFace(font, &opentype.FaceOptions{
+		Size: defaultFontSize,
+		DPI:  defaultFontDPI,
+	})
+
+	smallFont, err = opentype.NewFace(font, &opentype.FaceOptions{
+		Size: smallFontSize,
+		DPI:  defaultFontDPI,
+	})
+
+	return nil
 }
