@@ -17,11 +17,16 @@ func Print(name string) error {
 	}
 
 	conf := config.Get()
+	T := conf.Turn
+	B := conf.Beam
+	R := conf.StartR
+	C := conf.StartC
 
-	fmt.Println(conf.BoardData)
+	board := config.GetDefaultBoard()
+	fmt.Println(board)
 
-	max := logic.Max()
-	result, err := logic.Search()
+	max := logic.Max(board)
+	result, err := logic.Search(board, T, B, R, C)
 	if err != nil {
 		return xerrors.Errorf("yuru.Search() error: %w", err)
 	}
